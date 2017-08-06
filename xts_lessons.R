@@ -228,3 +228,238 @@ z_dup <- make.index.unique(z, drop = TRUE)
 
 # Round observations in z to the next hour
 z_round <- align.time(z, n = 3600)
+
+### Chapter 4 ###
+
+# Making irregular data regular
+# Extract the start date of the series
+start_date <- start(irregular_xts)
+
+# Extract the end date of the series
+end_date <- end(irregular_xts)
+
+# Create a regular date-time sequence
+regular_index <- seq(from = start_date, to = end_date, by = "day")
+
+# Create a zero-width xts object
+regular_xts <- xts(,order.by = regular_index)
+
+# Merge irregular_xts and regular_xts
+merged_xts <- merge(irregular_xts, regular_xts)
+
+# Look at the first few rows of merged_xts
+head(merged_xts)
+
+# Use the fill argument to fill NA with their previous value
+merged_filled_xts <- merge(irregular_xts, regular_xts, fill = na.locf)
+
+# Look at the first few rows of merged_filled_xts
+head(merged_filled_xts)
+
+# Low frequency data
+# Aggregate DFF to monthly
+monthly_fedfunds <- apply.monthly(DFF, mean)
+
+# Convert index to yearmon
+index(monthly_fedfunds) <- as.yearmon(index(monthly_fedfunds))
+
+# Merge FEDFUNDS with the monthly aggregate
+merged_fedfunds <- merge(FEDFUNDS, monthly_fedfunds)
+
+# Look at the first few rows of the merged object
+head(merged_fedfunds)
+
+# Look at the first few rows of merged_fedfunds
+head(merged_fedfunds)
+
+# Fill NA forward
+merged_fedfunds_locf <- na.locf(merged_fedfunds)
+
+# Extract index values containing last day of month
+# And it was the index() part that messed me up here
+aligned_last_day <- merged_fedfunds_locf[index(monthly_fedfunds)]
+
+# Fill NA backward
+merged_fedfunds_locb <- na.locf(merged_fedfunds, fromLast = TRUE)
+
+# Extract index values containing first day of month
+aligned_first_day <- merged_fedfunds_locb[index(FEDFUNDS)]
+
+# Extract index weekdays
+index_weekdays <- .indexwday(DFF)
+
+# Find locations of Wednesdays
+wednesdays <- which(index_weekdays == 3)
+
+# Create custom end points
+end_points <- c(0, wednesdays, nrow(DFF))
+
+# Calculate weekly mean using custom end points
+weekly_mean <- period.apply(DFF, end_points, mean)
+
+# Intraday data and timezones
+# Create merged object with a Europe/London timezone
+tz_london <- merge(london, chicago)
+
+# Look at tz_london structure
+str(tz_london)
+
+# Create merged object with a America/Chicago timezone
+tz_chicago <- merge(chicago, london)
+
+# Look at tz_chicago structure
+str(tz_chicago)
+
+# Create a regular date-time sequence
+regular_index <- seq(as.POSIXct("2010-01-04 09:00"), as.POSIXct("2010-01-08 16:00"), by = "30 min")
+
+# Create a zero-width xts object
+regular_xts <- xts(, order.by = regular_index)
+
+# Merge irregular_xts and regular_xts, filling NA with their previous value
+merged_xts <- merge(irregular_xts, regular_xts, fill = na.locf)
+
+# Subset to trading day (9AM - 4PM)
+trade_day <- merged_xts["T09:00/T16:00"]
+
+# Split trade_day into days
+daily_list <- split(trade_day , f = "days")
+
+# Use lapply to call na.locf for each day in daily_list
+daily_filled <- lapply(daily_list, FUN = na.locf)
+
+# Use do.call to rbind the results
+filled_by_trade_day <- do.call(rbind, daily_filled)
+
+# Convert raw prices to 5-second prices
+xts_5sec <- to.period(intraday_xts, period = "seconds", k = 5)
+
+# Convert raw prices to 10-minute prices
+xts_10min <- to.period(intraday_xts, period = "minutes", k = 10)
+
+# Convert raw prices to 1-hour prices
+xts_1hour <- to.period(intraday_xts, period = "hours", k = 1)
+
+### Chapter 5 ###
+
+# Import text files
+# Load AMZN.csv
+# Might need dir = "file path here" in real life
+getSymbols("AMZN", src = "csv")
+
+# Look at AMZN structure
+str(AMZN)
+
+# Import AMZN.csv using read.zoo
+amzn_zoo <- read.zoo("AMZN.csv", sep = ",", header = TRUE)
+
+# Convert to xts
+amzn_xts <- as.xts(amzn_zoo)
+
+# Look at the first few rows of amzn_xts
+head(amzn_xts)
+
+# Read data with read.csv
+une_data <- read.csv("UNE.csv", nrows = 5)
+
+# Look at the structure of une_data
+str(une_data)
+
+# Read data with read.zoo, specifying index columns
+une_zoo <- read.zoo("UNE.csv", index.column = c("Date", "Time"), sep = ",", header = TRUE)
+
+# Look at first few rows of data
+head(une_zoo)
+
+# Read data with read.csv
+two_symbols_data <- read.csv("two_symbols.csv", nrows = 5)
+
+# Look at the structure of two_symbols_data
+str(two_symbols_data)
+
+# Read data with read.zoo, specifying index columns
+two_symbols_zoo <- read.zoo("two_symbols.csv", split = c("Symbol", "Type"), sep = ",", header = TRUE)
+
+# Look at first few rows of data
+head(two_symbols_zoo)
+
+# Checking for weirdness
+# Missing values and corporate actions (splits and dividends)
+# Dividend should decrease the stock price at the same amount of dividend
+
+# fill NA using last observation carried forward
+locf <- na.locf(DGS10)
+
+# fill NA using linear interpolation
+approx <- na.approx(DGS10)
+
+# fill NA using spline interpolation
+spline <- na.spline(DGS10)
+
+# merge into one object
+na_filled <- merge(locf, approx, spline)
+
+# plot combined object
+plot(na_filled, col = c("black", "red", "green"))
+
+# Download AAPL data from Yahoo Finance
+getSymbols("AAPL", src = "yahoo")
+
+# Plot close price
+plot(Cl(AAPL))
+
+# Plot adjusted close price
+plot(Ad(AAPL))
+
+# Look at first few rows aapl_yahoo
+head(aapl_yahoo)
+
+# Look at first few rows aapl_google
+head(aapl_google)
+
+# Plot difference between Yahoo adjusted close and Google close
+plot(Ad(aapl_yahoo) - Cl(aapl_google))
+
+# Plot difference between volume from Yahoo and Google
+plot(Vo(aapl_yahoo) - Vo(aapl_google))
+
+# Look at first few rows of AAPL
+head(AAPL)
+
+# Adjust AAPL for splits and dividends
+aapl_adjusted <- adjustOHLC(AAPL)
+
+# Look at first few rows of aapl_adjusted
+head(aapl_adjusted)
+
+# Download AAPL split data
+splits <- getSplits("AAPL")
+
+# Print the splits object
+splits
+
+# Download AAPL dividend data
+dividends <- getDividends("AAPL", src = "yahoo")
+
+# Look at the first few rows of dividends
+head(dividends)
+
+# Download unadjusted AAPL dividend data
+raw_dividends <- getDividends("AAPL", split.adjust = FALSE)
+
+# Look at the first few rows of raw_dividends
+head(raw_dividends)
+
+# Calculate split and dividend adjustment ratios
+ratios <- adjRatios(splits = splits, dividends = raw_dividends, close = Cl(AAPL))
+
+# Calculate adjusted close for AAPL
+aapl_adjusted <- Cl(AAPL) * ratios[, "Split"] * ratios[, "Div"]
+
+# Look at first few rows of Yahoo adjusted close
+head(Ad(AAPL))
+
+# Look at first few rows of aapl_adjusted
+head(aapl_adjusted)
+
+

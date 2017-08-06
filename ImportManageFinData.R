@@ -112,3 +112,4 @@ setSymbolLookup(ATT = list(name = "T"))
 
 # Load BRK.A and ATT data
 getSymbols(c("BRK.A", "ATT"))
+
