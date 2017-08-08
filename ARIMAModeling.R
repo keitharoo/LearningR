@@ -57,3 +57,4 @@ plot(MA)
 # Generate and plot an AR(1) with parameters 1.5 and -.75
 AR <- arima.sim(model = list(order = c(2, 0, 0), ar = c(1.5, -.75)), n = 200) 
 plot(AR)
+
