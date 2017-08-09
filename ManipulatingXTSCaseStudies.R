@@ -87,3 +87,16 @@ flights_xts2 <- as.xts(flights2)
 # Examine the first five rows of your new flights_xts2 object
 head(flights_xts2, n = 5)
 
+### Chapter 2 ###
+# View the structure of each object
+str(temps_1)
+str(temps_2)
+
+# View the first and last rows of temps_1
+head(temps_1)
+tail(temps_1)
+
+# View the first and last rows of temps_2
+head(temps_2)
+tail(temps_2)
+
